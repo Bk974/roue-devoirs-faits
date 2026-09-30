@@ -1,0 +1,7 @@
+{
+  "name": "ecouter-avant-d-aider",
+  "private": true,
+  "version": "1.0.0",
+  "description": "La roue des devoirs prescrits : page HTML et relais Netlify pour les séances avec téléphones.",
+  "dependencies": { "@netlify/blobs": "^8.1.0" }
+}
