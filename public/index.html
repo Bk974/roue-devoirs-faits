@@ -58,7 +58,7 @@ body.host .top button.lnk{font-size:1rem}
 
 /* ---------- accueil ---------- */
 .hero{max-width:980px;margin:1.2rem auto 0}
-.hero h1{font-size:clamp(1.6rem,3.6vw,2.5rem);margin:.3rem 0 .5rem}
+.hero h1{font-size:clamp(1.6rem,3.6vw,2.5rem);margin:.9rem 0 1rem;line-height:1.12}
 .lede{font-size:1rem;max-width:44rem;color:#2c3446}
 .modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:.9rem;margin:1.2rem 0}
 .mode{background:var(--card);border:1.5px solid var(--line);border-top:6px solid var(--c);border-radius:16px;padding:1.2rem;display:flex;flex-direction:column;gap:.7rem;text-align:left}
@@ -886,7 +886,7 @@ function qrBlock() { const p = qrParts(); return p.qr + p.code + p.note + p.form
 function vHome() {
   return `<section class="hero">
     <div class="kick">Formation Devoirs faits · Atelier de diagnostic partagé</div>
-    <h1>Écouter avant d’aider <span style="display:block;margin-top:.15em;font-size:.55em;color:var(--situation)">La roue des devoirs prescrits</span></h1>
+    <h1>Écouter avant d’aider <span style="display:block;margin-top:.5em;font-size:.55em;color:var(--situation)">La roue des devoirs prescrits</span></h1>
     <p class="lede">Un même devoir appelle des aides différentes selon ce que vit l’élève. Cet atelier entraîne à écouter d’abord, supposer un besoin, puis choisir une technique à tester. Le raisonnement compte davantage que la réponse.</p>
     <details class="how"><summary>La règle en quatre étapes</summary><ol>
       <li><b>La roue tourne</b> et désigne un devoir prescrit. Une parole d’élève apparaît.</li>
