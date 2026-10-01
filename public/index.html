@@ -267,6 +267,12 @@ body.host .step{font-size:.95rem}
 .locked .sent{font-weight:700;color:var(--g3)}
 .locked .sent.no{color:var(--g1)}
 
+.mode .btn.pastel{color:#1d2433;border:2px solid transparent;box-shadow:none}
+.mode .btn.pastel.sky{background:#bfe3f7;border-color:#8cc6e6}
+.mode .btn.pastel.peach{background:#fbd7ae;border-color:#f0b46f}
+.mode .btn.pastel.mint{background:#cdebd0;border-color:#9bd0a1}
+.mode .btn.pastel:hover,.mode .btn.pastel:focus-visible{filter:brightness(.96);transform:translateY(-1px)}
+
 </style>
 </head>
 <body>
@@ -305,10 +311,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
    ============================================================ */
 
 const LEVELS = {
-  A: { name: "Niveau 1", desc: "Étayage léger : une seule tâche (devoirs 01 à 05).", dots: 1, test: n => n <= 5 },
-  B: { name: "Niveau 2", desc: "Étayage à doser : plusieurs tâches à la fois (devoirs 06 à 10).", dots: 2, test: n => n >= 6 && n <= 10 },
-  C: { name: "Niveau 3", desc: "Étayage à construire : consigne floue, implicite ou trop longue (devoirs 11 à 15).", dots: 3, test: n => n >= 11 },
-  T: { name: "Tous les niveaux", desc: "Les 19 cas, du niveau 1 au niveau 3 (animation de séance).", dots: 0, test: n => true }
+  A: { name: "Niveau 1", desc: "Étayage léger : une seule tâche.", dots: 1, test: n => n <= 5 },
+  B: { name: "Niveau 2", desc: "Étayage à doser : plusieurs tâches à la fois.", dots: 2, test: n => n >= 6 && n <= 10 },
+  C: { name: "Niveau 3", desc: "Étayage à construire : consigne floue, implicite ou trop longue.", dots: 3, test: n => n >= 11 },
+  T: { name: "Tous les niveaux", desc: "Quatre cas tirés dans les 19, du niveau 1 au niveau 3 (animation de séance).", dots: 0, test: n => true }
 };
 
 /* ---------- Devoirs prescrits ---------- */
@@ -663,15 +669,20 @@ function parseCode(s) {
   if (!"TABC".includes(lv) || [...seed].some(ch => !ALPHA.includes(ch))) return null;
   return { seed, level: lv, code: seed + "-" + lv };
 }
-function buildSeq(seed, level) {
-  const cs = levelCases(level);
-  const seq = shuffle(cs.map(c => c.id), rng("seq|" + seed + "|" + level));
+const N_SALLE = 4, N_SOLO = 5;
+function buildSeq(seed, level, n = N_SALLE) {
+  let ids;
+  if (level === "T") {                              /* tous les niveaux : on alterne les niveaux 1, 2, 3 */
+    const pools = ["A", "B", "C"].map(k => shuffle(levelCases(k).map(c => c.id), rng("seq|" + seed + "|" + k)));
+    ids = []; for (let i = 0; ids.length < pools.reduce((a, p) => a + p.length, 0); i++) pools.forEach(p => { if (i < p.length) ids.push(p[i]); });
+  } else ids = shuffle(levelCases(level).map(c => c.id), rng("seq|" + seed + "|" + level));
+  const seq = ids;
   for (let i = 1; i < seq.length; i++) {           /* pas deux fois le même devoir de suite */
     if (CASEBY[seq[i]].p === CASEBY[seq[i - 1]].p) {
       for (let j = i + 1; j < seq.length; j++) if (CASEBY[seq[j]].p !== CASEBY[seq[i - 1]].p) { [seq[i], seq[j]] = [seq[j], seq[i]]; break; }
     }
   }
-  return seq;
+  return seq.slice(0, n);
 }
 const optionsFor = (seed, cs) => shuffle(cs.opts.map(o => ({ b: o[0], t: o[1], g: o[2], why: o[3], p: cs.p })), rng("opt|" + seed + "|" + cs.id)).map((o, i) => ({ ...o, L: "ABCD"[i] }));
 const revealCode = (seed, tour) => { const h = xmur3("rev|" + seed + "|" + tour)(); return ALPHA[h % ALPHA.length] + ALPHA[(h >>> 8) % ALPHA.length]; };
@@ -751,8 +762,7 @@ const baseURL = () => store.get("dfr:base") || (location.href.split("#")[0].spli
 const joinURL = () => baseURL() + "#/jouer/" + G.code;
 
 function newGame(mode, o) {
-  let seq = buildSeq(o.seed, o.level);
-  if (mode === "solo" && o.n) seq = seq.slice(0, o.n);
+  const seq = buildSeq(o.seed, o.level, mode === "solo" ? N_SOLO : N_SALLE);
   G = { mode, seed: o.seed, level: o.level, code: o.seed + "-" + o.level, seq, tour: 0, team: o.team || "", res: {}, lobby: mode === "host", done: false, chronoEnd: 0 };
   save();
 }
@@ -831,10 +841,10 @@ function wheelSVG(items, rot) {
   let body = "";
   items.forEach((it, i) => {
     const a0 = i * a, a1 = (i + 1) * a, [x0, y0] = pt(a0, R), [x1, y1] = pt(a1, R), ca = a0 + a / 2;
-    const fs = Math.max(17, Math.min(30, a * 1.05));
+    const fs = Math.max(21, Math.min(38, a * 1.2));
     const fill = i % 2 ? `color-mix(in srgb, ${it.c} 80%, #000000)` : it.c;
     body += `<path d="M0 0 L${x0} ${y0} A${R} ${R} 0 ${a > 180 ? 1 : 0} 1 ${x1} ${y1} Z" style="fill:${fill}" stroke="#fffdf8" stroke-width="3"/>`;
-    body += `<g transform="rotate(${(ca - 90).toFixed(2)})"><text x="${R - 16}" y="${(fs * 0.35).toFixed(1)}" text-anchor="end" fill="#fff" font-family="Source Sans 3, sans-serif" font-weight="800" font-size="${fs.toFixed(1)}"><tspan font-family="Fraunces, serif" font-weight="900" font-size="${(fs * 1.2).toFixed(1)}">${it.id}</tspan><tspan dx="9" font-weight="700" font-size="${(fs * 0.8).toFixed(1)}">${it.label}</tspan></text></g>`;
+    body += `<g transform="rotate(${(ca - 90).toFixed(2)})"><text x="${R - 18}" y="${(fs * 0.35).toFixed(1)}" text-anchor="end" fill="#fff" stroke="rgba(20,26,40,.55)" stroke-width="${(fs * 0.22).toFixed(1)}" paint-order="stroke" stroke-linejoin="round" font-family="Source Sans 3, sans-serif" font-weight="800" font-size="${fs.toFixed(1)}">${it.label}</text></g>`;
   });
   const style = rot ? ` style="transform:rotate(${rot}deg);transition:none"` : "";
   return `<svg id="wheel" class="wheel" viewBox="-256 -256 512 512" role="img" aria-label="Roue des devoirs prescrits"${style}>${body}<circle r="252" fill="none" stroke="#1d2433" stroke-width="6"/></svg>`;
@@ -884,9 +894,9 @@ function vHome() {
       <li><b>Choisir</b> parmi quatre propositions (un besoin supposé et une technique à tester).</li>
       <li><b>Débattre puis révéler</b> : les propositions sont jugées bien ajustées, défendables, risquées ou à côté. Une même technique n’est jamais la bonne réponse à un même devoir : tout dépend de la situation de l’élève.</li></ol></details>
     <div class="modes">
-      <div class="mode" style="--c:var(--devoir)"><h2>${ic("users", 24)} Animer une séance</h2><p>Projection collective et débat à l’oral. Chaque équipe choisit sur son téléphone ou sa tablette avec le code de la partie ; les choix s’affichent en direct à l’écran.</p><button class="btn" data-act="go" data-v="hostsetup">Créer une partie</button></div>
-      <div class="mode" style="--c:var(--situation)"><h2>${ic("phone", 24)} Rejoindre une séance</h2><p>Une partie est projetée : saisir le code affiché et un nom d’équipe. La roue, l’écoute et le débat se font en salle ; le téléphone sert à choisir quand le formateur ouvre le choix.</p><button class="btn" data-act="go" data-v="join">Rejoindre</button></div>
-      <div class="mode" style="--c:var(--indic)"><h2>${ic("solo", 24)} S’entraîner seul</h2><p>En autonomie, à distance, sans animateur. Retour immédiat après chaque choix, puis un bilan à copier ou à télécharger.</p><button class="btn" data-act="go" data-v="solosetup">S’entraîner</button></div>
+      <div class="mode" style="--c:var(--devoir)"><h2>${ic("users", 24)} Animer une séance</h2><p>Projection collective et débat à l’oral. Chaque équipe choisit sur son téléphone ou sa tablette avec le code de la partie ; les choix s’affichent en direct à l’écran.</p><button class="btn pastel sky" data-act="go" data-v="hostsetup">Créer une partie</button></div>
+      <div class="mode" style="--c:var(--situation)"><h2>${ic("phone", 24)} Rejoindre une séance</h2><p>Une partie est projetée : saisir le code affiché et un nom d’équipe. La roue, l’écoute et le débat se font en salle ; le téléphone sert à choisir quand le formateur ouvre le choix.</p><button class="btn pastel peach" data-act="go" data-v="join">Rejoindre</button></div>
+      <div class="mode" style="--c:var(--indic)"><h2>${ic("solo", 24)} S’entraîner seul</h2><p>En autonomie, à distance, sans animateur. Retour immédiat après chaque choix, puis un bilan à copier ou à télécharger.</p><button class="btn pastel mint" data-act="go" data-v="solosetup">S’entraîner</button></div>
     </div>
   </section>`;
 }
